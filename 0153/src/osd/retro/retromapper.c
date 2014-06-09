@@ -2,12 +2,30 @@ void retro_poll_mame_input();
 
 static int rtwi=320,rthe=240,topw=1600; // DEFAULT TEXW/TEXH/PITCH
 static float rtaspect=0;
+static int max_width=0;
+static int max_height=0;
+
+static char option_mouse[50];     
+static char option_cheats[50];
+static char option_nag[50];
+static char option_info[50];
+static char option_renderer[50];
+static char option_warnings[50];
+static char option_osd[50];
+static char option_cli[50];
+static char option_bios[50];
+static char option_softlist[50];
+static char option_softlist_media[50];
+static char option_media[50];
+
 int SHIFTON=-1,NEWGAME_FROM_OSD=0;
 char RPATH[512];
 
 const char *retro_save_directory;
 const char *retro_system_directory;
 const char *retro_content_directory;
+
+retro_log_printf_t log_cb;
 
 extern "C" int mmain(int argc, const char *argv);
 extern bool draw_this_frame;
@@ -24,7 +42,7 @@ retro_video_refresh_t video_cb = NULL;
 retro_environment_t environ_cb = NULL;
 
 static retro_input_state_t input_state_cb = NULL;
-static retro_audio_sample_batch_t audio_batch_cb = NULL;
+/*static*/ retro_audio_sample_batch_t audio_batch_cb = NULL;
 
 void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) { audio_batch_cb = cb; }
 static retro_input_poll_t input_poll_cb;
@@ -37,23 +55,41 @@ void retro_set_audio_sample(retro_audio_sample_t cb) { }
 
 void retro_set_environment(retro_environment_t cb)
 {
+
+ 
+   sprintf(option_mouse,"%s_%s",core,"mouse_enable");
+   sprintf(option_cheats,"%s_%s",core,"cheats_enable");
+   sprintf(option_nag,"%s_%s",core,"hide_nagscreen");
+   sprintf(option_info,"%s_%s",core,"hide_infoscreen");
+   sprintf(option_warnings,"%s_%s",core,"hide_warnings");
+   sprintf(option_renderer,"%s_%s",core,"alternate_renderer");
+   sprintf(option_osd,"%s_%s",core,"boot_to_osd");
+   sprintf(option_bios,"%s_%s",core,"boot_to_bios");
+   sprintf(option_cli,"%s_%s",core,"boot_from_cli");
+   sprintf(option_softlist,"%s_%s",core,"softlists_enable");
+   sprintf(option_softlist_media,"%s_%s",core,"softlists_auto_media");
+   sprintf(option_media,"%s_%s",core,"media_type");
+   
+     
    static const struct retro_variable vars[] = {
 	
 	//common for MAME/MESS/UME
-	{ "core_current_mouse_enable", "Enable mouse; disabled|enabled" },
-	{ "core_current_nagscreenpatch_enable", "Enable nagscreen patch; disabled|enabled" },      
-	{ "core_current_videoapproach1_enable", "Enable video approach 1; disabled|enabled" },
+	{ option_mouse, "Enable in-game mouse; disabled|enabled" },
+	{ option_cheats, "Enable cheats; disabled|enabled" },
+	{ option_nag, "Hide nag screen; disabled|enabled" },
+	{ option_info, "Hide gameinfo screen; disabled|enabled" },
+	{ option_warnings, "Hide warnings screen; disabled|enabled" },
+	{ option_renderer, "Alternate render method; disabled|enabled" },
 
 	// ONLY FOR MESS/UME
 #if !defined(WANT_MAME)
-        { "core_softlist_enable", "Enable softlists; enabled|disabled" },
-	{ "core_softlist_auto", "Softlist automatic media type; enabled|disabled" },
-	{ "core_media_type", "Media type; cart|flop|cdrm|cass|hard|serl|prin" },   	  
-	{ "core_boot_bios", "Boot to BIOS; disabled|enabled" },
-	{ "core_commandline", "Boot from CLI; disabled|enabled" },
+    { option_softlist, "Enable softlists; enabled|disabled" },
+	{ option_softlist_media, "Softlist automatic media type; enabled|disabled" },
+	{ option_media, "Media type; cart|flop|cdrm|cass|hard|serl|prin" },   	  	
+	{ option_bios, "Boot to BIOS; disabled|enabled" },
 #endif
-	{ "core_boot_osd", "Boot to OSD; disabled|enabled" },
-	{ "core_exp_commandline", "Experimental CLI; disabled|enabled" },
+	{ option_osd, "Boot to OSD; disabled|enabled" },
+	{ option_cli, "Boot from CLI; disabled|enabled" },
 	{ NULL, NULL },
 
    };
@@ -66,61 +102,97 @@ void retro_set_environment(retro_environment_t cb)
 static void check_variables(void)
 {
    struct retro_variable var = {0};
-
-   var.key = "core_exp_commandline";
+ 
+   var.key = option_cli;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "enabled") == 0)
          experimental_cmdline = true;
       if (strcmp(var.value, "disabled") == 0)
          experimental_cmdline = false;       
    }  
- 
-   var.key = "core_current_mouse_enable";
+   
+   var.key = option_mouse;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "disabled") == 0)
          mouse_enable = false;
       if (strcmp(var.value, "enabled") == 0)
          mouse_enable = true;
    }
-
-   var.key = "core_current_nagscreenpatch_enable";
+   
+   var.key = option_cheats;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "disabled") == 0)
-         nagscreenpatch_enable = false;
+         cheats_enable = false;
       if (strcmp(var.value, "enabled") == 0)
-         nagscreenpatch_enable = true;
+         cheats_enable = true;
+   }   
+
+   var.key = option_nag;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "disabled") == 0)
+         hide_nagscreen = false;
+      if (strcmp(var.value, "enabled") == 0)
+         hide_nagscreen = true;
    }
 
-   var.key = "core_current_videoapproach1_enable";
+   var.key = option_info;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "disabled") == 0)
-         videoapproach1_enable = false;
+         hide_gameinfo = false;
       if (strcmp(var.value, "enabled") == 0)
-         videoapproach1_enable = true;
+         hide_gameinfo = true;
+   }   
+   
+   var.key = option_warnings;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "disabled") == 0)
+         hide_warnings = false;
+      if (strcmp(var.value, "enabled") == 0)
+         hide_warnings = true;
+   }      
+   
+   var.key = option_renderer;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "disabled") == 0)
+	  {
+         alternate_renderer = false;
+		 max_width=rtwi;
+	     max_height=rthe;		 
+	  }
+      if (strcmp(var.value, "enabled") == 0)
+	  {
+         alternate_renderer = true;
+		 max_width=1600;
+	     max_height=1200;
+	  }
    }
 
-   var.key = "core_boot_osd";
+   var.key = option_osd;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "enabled") == 0)
          boot_to_osd_enabled = true;
       if (strcmp(var.value, "disabled") == 0)
@@ -129,66 +201,48 @@ static void check_variables(void)
 
 #if !defined(WANT_MAME)
 
-   var.key = "core_media_type";
+   var.key = option_media;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       sprintf(mediaType,"-%s",var.value);
-      fprintf(stderr, "value: %s\n", mediaType);
    }
    
-   var.key = "core_softlist_enable";
+   var.key = option_softlist;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "enabled") == 0)
          softlist_enabled = true;
       if (strcmp(var.value, "disabled") == 0)
          softlist_enabled = false;       
    }      
    
-   var.key = "core_softlist_auto";
+   var.key = option_softlist_media;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "enabled") == 0)
          softlist_auto = true;
       if (strcmp(var.value, "disabled") == 0)
          softlist_auto = false;       
    }       
 
-   var.key = "core_boot_bios";
+   var.key = option_bios;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "enabled") == 0)
          boot_to_bios_enabled = true;
       if (strcmp(var.value, "disabled") == 0)
          boot_to_bios_enabled = false;       
    } 
- 
-   var.key = "core_commandline";
-   var.value = NULL;
-
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
-   {
-      fprintf(stderr, "value: %s\n", var.value);
-      if (strcmp(var.value, "enabled") == 0)
-         commandline_enabled = true;
-      if (strcmp(var.value, "disabled") == 0)
-         commandline_enabled = false;       
-   }   
-    
+     
 #endif   
-  
 }
 
 unsigned retro_api_version(void)
@@ -218,15 +272,31 @@ void retro_get_system_info(struct retro_system_info *info)
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
+   check_variables();
+   
    info->geometry.base_width = rtwi;
-   info->geometry.base_height =rthe;
-
-   info->geometry.max_width = 1600;
-   info->geometry.max_height = 1200;
-
-   info->geometry.aspect_ratio =rtaspect;
+   info->geometry.base_height = rthe;
+   
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "AV_INFO: width=%d height=%d\n",info->geometry.base_width,info->geometry.base_height);
+      
+   info->geometry.max_width = max_width;
+   info->geometry.max_height = max_height;
+   
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "AV_INFO: max_width=%d max_height=%d\n",info->geometry.max_width,info->geometry.max_height);   
+	  
+   info->geometry.aspect_ratio = rtaspect;
+   
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "AV_INFO: aspect_ratio=%f\n",info->geometry.aspect_ratio);	  
+   
    info->timing.fps = 60;
    info->timing.sample_rate = 48000.0;
+   
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "AV_INFO: fps=%f sample_rate=%f\n",info->timing.fps,info->timing.sample_rate);	  
+   
 }
 
 static void retro_wrap_emulator()
@@ -249,6 +319,13 @@ static void retro_wrap_emulator()
 }
 
 void retro_init (void){ 
+		
+		// initialize logger interface
+		struct retro_log_callback log;
+		if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log))
+			log_cb = log.log;
+		else 
+		    log_cb = NULL;		
 
 #ifndef M16B
     	enum retro_pixel_format fmt =RETRO_PIXEL_FORMAT_XRGB8888;
@@ -261,8 +338,10 @@ void retro_init (void){
 		if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir)
 		{
 			// if defined, use the system directory			
-			retro_system_directory=system_dir;		
+			retro_system_directory=system_dir;
 		}		   
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "SYSTEM_DIRECTORY: %s", retro_system_directory);			
 		
 		const char *content_dir = NULL;
    
@@ -271,6 +350,8 @@ void retro_init (void){
 			// if defined, use the system directory			
 			retro_content_directory=content_dir;		
 		}			
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "CONTENT_DIRECTORY: %s", retro_content_directory);						
 		
 		const char *save_dir = NULL;
    
@@ -284,15 +365,15 @@ void retro_init (void){
 			// make retro_save_directory the same in case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY is not implemented by the frontend
 			retro_save_directory=retro_system_directory;
 		}
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "SAVE_DIRECTORY: %s", retro_save_directory);								
 		
-		printf("Retro SYSTEM_DIRECTORY %s\n",retro_system_directory);
-		printf("Retro SAVE_DIRECTORY %s\n",retro_save_directory);
-		printf("Retro CONTENT_DIRECTORY %s\n",retro_content_directory);
-
-
+	
     	if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
     	{
-    		fprintf(stderr, "RGB pixel format is not supported.\n");
+    		if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "pixel format not supported");			
+			
     		exit(0);
     	}
 
@@ -315,7 +396,10 @@ void retro_deinit(void)
    LOGI("Retro DeInit\n");
 }
 
-void retro_reset (void) {}
+void retro_reset (void)
+{
+   mame_reset = 1;
+}
 
 
 
@@ -327,14 +411,13 @@ void retro_run (void)
 
    if(NEWGAME_FROM_OSD==1)
    {
-	struct retro_system_av_info ninfo;
-	retro_get_system_av_info(&ninfo);
+      struct retro_system_av_info ninfo;
+      retro_get_system_av_info(&ninfo);
 
-	environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &ninfo);
+      environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &ninfo);
 
-	printf("ChangeAV: w:%d h:%d ra:%f %f \n",ninfo.geometry.base_width,ninfo.geometry.base_height,ninfo.geometry.aspect_ratio);
-	NEWGAME_FROM_OSD=0;
-
+      printf("ChangeAV: w:%d h:%d ra:%f %f \n",ninfo.geometry.base_width,ninfo.geometry.base_height,ninfo.geometry.aspect_ratio);
+      NEWGAME_FROM_OSD=0;
    }
 
 	retro_poll_mame_input();
