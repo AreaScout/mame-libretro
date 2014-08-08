@@ -419,7 +419,7 @@ void retro_init (void){
     	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
 #endif
 
-		const char *system_dir = NULL;
+		char *system_dir = NULL;
    
 		if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir)
 		{
@@ -427,7 +427,7 @@ void retro_init (void){
 			retro_system_directory=system_dir;		
 		}		   
 		
-		const char *content_dir = NULL;
+		char *content_dir = NULL;
    
 		if (environ_cb(RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY, &content_dir) && content_dir)
 		{
@@ -435,7 +435,7 @@ void retro_init (void){
 			retro_content_directory=content_dir;		
 		}			
 		
-		const char *save_dir = NULL;
+		char *save_dir = NULL;
    
 		if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &save_dir) && save_dir)
 		{

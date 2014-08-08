@@ -155,7 +155,7 @@ cothread_t emuThread;
 //  main
 //============================================================
 
-static const char* xargv[] = {
+static char* xargv[] = {
 	core,
 	"-joystick",
 	"-samplerate",
