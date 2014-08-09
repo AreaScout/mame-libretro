@@ -44,7 +44,7 @@ TOOLSOBJ = $(OBJ)/tools
 OBJDIRS += \
 	$(TOOLSOBJ) \
 
-
+LDFLAGSTOOLS = -static
 
 #-------------------------------------------------
 # set of tool targets
@@ -74,7 +74,7 @@ ROMCMPOBJS = \
 
 romcmp$(EXE): $(ROMCMPOBJS) $(LIBUTIL) $(ZLIB) $(EXPAT) $(LIBOCORE)
 	@echo Linking $@...
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+	$(LD) $(LDFLAGSTOOLS) $^ $(LIBS) -o $@
 
 
 
@@ -88,7 +88,7 @@ CHDMANOBJS = \
 chdman$(EXE): $(CHDMANOBJS) $(LIBUTIL) $(ZLIB) $(EXPAT) $(FLAC_LIB) $(7Z_LIB) $(LIBOCORE)
 	$(CC) $(CDEFS) $(CFLAGS) -c $(SRC)/version.c -o $(VERSIONOBJ)
 	@echo Linking $@...
-	$(LD) $(LDFLAGS) $(VERSIONOBJ) $^ $(LIBS) $(FLAC_LIB) -o $@
+	$(LD) $(LDFLAGSTOOLS) $(VERSIONOBJ) $^ $(LIBS) $(FLAC_LIB) -o $@
 
 
 
@@ -101,7 +101,7 @@ JEDUTILOBJS = \
 
 jedutil$(EXE): $(JEDUTILOBJS) $(LIBUTIL) $(LIBOCORE) $(ZLIB) $(EXPAT)
 	@echo Linking $@...
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+	$(LD) $(LDFLAGSTOOLS) $^ $(LIBS) -o $@
 
 
 
@@ -114,7 +114,7 @@ UNIDASMOBJS = \
 
 unidasm$(EXE): $(UNIDASMOBJS) $(LIBDASM) $(LIBEMU) $(LIBUTIL) $(LIBOCORE) $(ZLIB) $(EXPAT)
 	@echo Linking $@...
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+	$(LD) $(LDFLAGSTOOLS) $^ $(LIBS) -o $@
 
 
 
@@ -127,7 +127,7 @@ LDRESAMPLEOBJS = \
 
 ldresample$(EXE): $(LDRESAMPLEOBJS) $(LIBUTIL) $(LIBOCORE) $(ZLIB) $(FLAC_LIB) $(7Z_LIB) $(EXPAT)
 	@echo Linking $@...
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(FLAC_LIB) -o $@
+	$(LD) $(LDFLAGSTOOLS) $^ $(LIBS) $(FLAC_LIB) -o $@
 
 
 
@@ -140,7 +140,7 @@ LDVERIFYOBJS = \
 
 ldverify$(EXE): $(LDVERIFYOBJS) $(LIBUTIL) $(LIBOCORE) $(ZLIB) $(FLAC_LIB) $(7Z_LIB) $(EXPAT)
 	@echo Linking $@...
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(FLAC_LIB) -o $@
+	$(LD) $(LDFLAGSTOOLS) $^ $(LIBS) $(FLAC_LIB) -o $@
 
 
 
@@ -153,7 +153,7 @@ REGREPOBJS = \
 
 regrep$(EXE): $(REGREPOBJS) $(LIBUTIL) $(LIBOCORE) $(ZLIB) $(EXPAT)
 	@echo Linking $@...
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+	$(LD) $(LDFLAGSTOOLS) $^ $(LIBS) -o $@
 
 
 
@@ -166,7 +166,7 @@ SRCCLEANOBJS = \
 
 srcclean$(EXE): $(SRCCLEANOBJS) $(LIBUTIL) $(LIBOCORE) $(ZLIB) $(EXPAT)
 	@echo Linking $@...
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+	$(LD) $(LDFLAGSTOOLS) $^ $(LIBS) -o $@
 
 
 
@@ -179,7 +179,7 @@ SRC2HTMLOBJS = \
 
 src2html$(EXE): $(SRC2HTMLOBJS) $(LIBUTIL) $(LIBOCORE) $(ZLIB) $(EXPAT)
 	@echo Linking $@...
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+	$(LD) $(LDFLAGSTOOLS) $^ $(LIBS) -o $@
 
 
 
@@ -192,7 +192,7 @@ SPLITOBJS = \
 
 split$(EXE): $(SPLITOBJS) $(LIBUTIL) $(LIBOCORE) $(ZLIB) $(EXPAT)
 	@echo Linking $@...
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+	$(LD) $(LDFLAGSTOOLS) $^ $(LIBS) -o $@
 
 
 
@@ -205,5 +205,5 @@ PNGCMPOBJS = \
 
 pngcmp$(EXE): $(PNGCMPOBJS) $(LIBUTIL) $(LIBOCORE) $(ZLIB)
 	@echo Linking $@...
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+	$(LD) $(LDFLAGSTOOLS) $^ $(LIBS) -o $@
 
