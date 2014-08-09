@@ -44,7 +44,7 @@ TOOLSOBJ = $(OBJ)/tools
 OBJDIRS += \
 	$(TOOLSOBJ) \
 
-LDFLAGS = -static
+
 
 #-------------------------------------------------
 # set of tool targets
