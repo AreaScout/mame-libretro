@@ -101,7 +101,7 @@ ifeq ($(platform), unix)
 		AR = @ar
 		LD = g++
 		CCOMFLAGS += $(PLATCFLAGS) -ffast-math
-		LIBS += -lstdc++ -lpthread
+		LIBS += -lpthread
 ifeq ($(firstword $(filter x86_64,$(UNAME))),x86_64)
 PTR64 = 1
 endif
