@@ -102,12 +102,11 @@ ifeq ($(platform), unix)
 		TARGETLIB := $(TARGET_NAME)_libretro.so
 		TARGETOS=linux
 		fpic := -fPIC
-		SHARED := -shared -static-libgcc -static-libstdc++
-		CCOMFLAGS += $(fpic) -mthumb-interwork
-		PLATCFLAGS += -DHAVE_POSIX_MEMALIGN -DRETRO -DRETRO_AND -DALIGN_INTS -DALIGN_SHORTS -DSDLMAME_NO64BITIO -DLSB_FIRST -DUSE_ARM_HACK -DLUA_USE_MKSTEMP -DLUA_USE_GMTIME_R
-		LDFLAGS +=  $(fpic) $(SHARED)
+		SHARED := -shared -static-libgcc -static-libstdc++ -Wl,--warn-common
+		CCOMFLAGS += $(fpic) -mthumb-interwork -funroll-loops -fstack-protector-all
+		PLATCFLAGS += -DHAVE_POSIX_MEMALIGN -DRETRO -DRETRO_AND -DALIGN_INTS -DALIGN_SHORTS -DSDLMAME_NO64BITIO -DLSB_FIRST -DUSE_ARM_HACK
+		LDFLAGS +=  $(fpic)  $(SHARED)
 		NATIVELD = g++
-		NATIVELDFLAGS = -Wl,--warn-common -lstdc++
 		NATIVECC = g++
 		NATIVECFLAGS = -std=gnu99
 		armplatform := 1
@@ -116,7 +115,7 @@ ifeq ($(platform), unix)
 		AR = @ar
 		LD = g++
 		CCOMFLAGS += $(PLATCFLAGS) -ffast-math
-		LIBS += -lstdc++ -lpthread
+		LIBS += -lpthread
 ifeq ($(firstword $(filter x86_64,$(UNAME))),x86_64)
 PTR64 = 1
 endif
