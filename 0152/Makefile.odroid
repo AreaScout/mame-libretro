@@ -103,7 +103,7 @@ ifeq ($(platform), unix)
 		TARGETOS=linux
 		fpic := -fPIC
 		SHARED := -shared -static-libgcc -static-libstdc++ -Wl,--warn-common
-		CCOMFLAGS += $(fpic) -mthumb-interwork -funroll-loops -fstack-protector-all
+		CCOMFLAGS += $(fpic) -mthumb-interwork -funroll-loops
 		PLATCFLAGS += -DHAVE_POSIX_MEMALIGN -DRETRO -DRETRO_AND -DALIGN_INTS -DALIGN_SHORTS -DSDLMAME_NO64BITIO -DLSB_FIRST -DUSE_ARM_HACK
 		LDFLAGS +=  $(fpic)  $(SHARED)
 		NATIVELD = g++
